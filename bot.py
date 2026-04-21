@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
@@ -106,9 +107,16 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text(TEXT_SOON, reply_markup=soon_kb())
 
 
-if __name__ == "__main__":
+async def main():
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle))
     print("Бот запущено")
-    app.run_polling(drop_pending_updates=True)
+    async with app:
+        await app.start()
+        await app.updater.start_polling(drop_pending_updates=True)
+        await asyncio.Event().wait()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
