@@ -1,15 +1,12 @@
-import logging
 import os
+import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-TOKEN = os.environ.get("BOT_TOKEN", "YOUR_TOKEN_HERE")
-MANAGER_USERNAME = "@Vova_Melnyk_1"
-
-# ── Тексти ──────────────────────────────────────────────────────────────────
+TOKEN = os.environ.get("BOT_TOKEN")
+MANAGER = "Vova_Melnyk_1"
 
 TEXT_MAIN = "Що Вас цікавить?"
 
@@ -24,99 +21,94 @@ TEXT_SHELL = (
     "Оберіть дію, яку бажаєте виконати."
 )
 
-TEXT_SHELL_PIN = (
+TEXT_PIN = (
     "❕ Економія часу\n\n"
     "Ваш PIN-код (e-PIN) доступний в особистому кабінеті Shell Fleet Hub "
     "одразу після випуску картки — без очікування та додаткових листів!\n\n"
     "🔍 Обрати дію"
 )
 
-TEXT_SHELL_BLOCK = (
+TEXT_BLOCK = (
     "Якщо потрібна допомога в блокуванні зателефонуйте\n\n"
     "📞 +38 050-509-0-509\n\n"
     "Дякуємо!\n"
     "🔎 Обрати дію"
 )
 
-TEXT_SHELL_ORDER = (
+TEXT_ORDER = (
     "Бажаєте замовити картку Shell?\n\n"
     "📧 Надішліть лист на office@tsg-euroshell.com.ua\n\n"
     "Дякуємо!\n"
     "🔎 Обрати дію"
 )
 
-TEXT_COMING_SOON = "🔧 Цей розділ незабаром буде доступний. Дякуємо за терпіння!"
+TEXT_SOON = "🔧 Цей розділ незабаром буде доступний. Дякуємо за терпіння!"
 
-# ── Клавіатури ───────────────────────────────────────────────────────────────
 
-def kb_main():
+def main_kb():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("💳 Картка Shell", callback_data="shell")],
-        [InlineKeyboardButton("📦 Мультибокс T4E", callback_data="multibox")],
-        [InlineKeyboardButton("🖥 Онлайн кабінет", callback_data="cabinet")],
-        [InlineKeyboardButton("🛣 Оплата доріг", callback_data="roads")],
-        [InlineKeyboardButton("📄 Документи", callback_data="docs")],
-        [InlineKeyboardButton("🧾 ПДВ (VAT)", callback_data="vat")],
-        [InlineKeyboardButton("📰 Новини", callback_data="news")],
-        [InlineKeyboardButton("📞 Контакти", callback_data="contacts")],
+        [InlineKeyboardButton("📦 Мультибокс T4E", callback_data="soon")],
+        [InlineKeyboardButton("🖥 Онлайн кабінет", callback_data="soon")],
+        [InlineKeyboardButton("🛣 Оплата доріг", callback_data="soon")],
+        [InlineKeyboardButton("📄 Документи", callback_data="soon")],
+        [InlineKeyboardButton("🧾 ПДВ (VAT)", callback_data="soon")],
+        [InlineKeyboardButton("📰 Новини", callback_data="soon")],
+        [InlineKeyboardButton("📞 Контакти", callback_data="soon")],
     ])
 
-def kb_shell():
+
+def shell_kb():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔑 Забули пін", callback_data="shell_pin")],
-        [InlineKeyboardButton("🚫 Заблокувати", callback_data="shell_block")],
-        [InlineKeyboardButton("🛒 Замовити", callback_data="shell_order")],
-        [InlineKeyboardButton("💬 Чат з менеджером", url=f"https://t.me/{MANAGER_USERNAME.lstrip('@')}")],
+        [InlineKeyboardButton("🔑 Забули пін", callback_data="pin")],
+        [InlineKeyboardButton("🚫 Заблокувати", callback_data="block")],
+        [InlineKeyboardButton("🛒 Замовити", callback_data="order")],
+        [InlineKeyboardButton("💬 Чат з менеджером", url=f"https://t.me/{MANAGER}")],
         [InlineKeyboardButton("🏠 До меню", callback_data="main")],
     ])
 
-def kb_back_shell():
+
+def back_kb():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("◀️ Назад", callback_data="shell"),
-         InlineKeyboardButton("🏠 До меню", callback_data="main")],
+        [
+            InlineKeyboardButton("◀️ Назад", callback_data="shell"),
+            InlineKeyboardButton("🏠 До меню", callback_data="main"),
+        ]
     ])
 
-def kb_coming_soon():
+
+def soon_kb():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🏠 До меню", callback_data="main")],
+        [InlineKeyboardButton("🏠 До меню", callback_data="main")]
     ])
 
-# ── Хендлери ─────────────────────────────────────────────────────────────────
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(TEXT_MAIN, reply_markup=kb_main())
+    await update.message.reply_text(TEXT_MAIN, reply_markup=main_kb())
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
 
-    # Головне меню
-    if data == "main":
-        await query.edit_message_text(TEXT_MAIN, reply_markup=kb_main())
+async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    d = q.data
 
-    # Shell
-    elif data == "shell":
-        await query.edit_message_text(TEXT_SHELL, reply_markup=kb_shell())
-    elif data == "shell_pin":
-        await query.edit_message_text(TEXT_SHELL_PIN, reply_markup=kb_back_shell())
-    elif data == "shell_block":
-        await query.edit_message_text(TEXT_SHELL_BLOCK, reply_markup=kb_back_shell())
-    elif data == "shell_order":
-        await query.edit_message_text(TEXT_SHELL_ORDER, reply_markup=kb_back_shell())
+    if d == "main":
+        await q.edit_message_text(TEXT_MAIN, reply_markup=main_kb())
+    elif d == "shell":
+        await q.edit_message_text(TEXT_SHELL, reply_markup=shell_kb())
+    elif d == "pin":
+        await q.edit_message_text(TEXT_PIN, reply_markup=back_kb())
+    elif d == "block":
+        await q.edit_message_text(TEXT_BLOCK, reply_markup=back_kb())
+    elif d == "order":
+        await q.edit_message_text(TEXT_ORDER, reply_markup=back_kb())
+    elif d == "soon":
+        await q.edit_message_text(TEXT_SOON, reply_markup=soon_kb())
 
-    # Інші розділи — заглушки (заповнимо пізніше)
-    elif data in ("multibox", "cabinet", "roads", "docs", "vat", "news", "contacts"):
-        await query.edit_message_text(TEXT_COMING_SOON, reply_markup=kb_coming_soon())
-
-# ── Запуск ────────────────────────────────────────────────────────────────────
-
-def main():
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button))
-    logger.info("Бот запущено")
-    app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(handle))
+    print("Бот запущено")
+    app.run_polling(drop_pending_updates=True)
